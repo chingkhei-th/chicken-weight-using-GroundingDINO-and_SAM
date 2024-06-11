@@ -1,41 +1,68 @@
 import os
-from tqdm import tqdm
-import roboflow
-from roboflow import Roboflow
+import torch
 
-# Set project directory
-PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+from groundingdino.util.inference import Model
+from segment_anything import sam_model_registry, SamPredictor
+from sklearn.linear_model import LinearRegression
+from src.utils import load_models
+from src.annotate import annotate_and_save_images
+from src.plot import plot_and_save_images
+from src.weight_predict import predict_and_display_weights
 
-# Upload annotations to Roboflow
-PROJECT_NAME = "auto-generated-dataset-7"
-PROJECT_DESCRIPTION = "auto-generated-dataset-7"
+# Define directories
+TEST_IMAGES_DIR = "./data/images/test"
+OUTPUT_DIR = "./data/outputs"
 
-roboflow.login()
-workspace = Roboflow().workspace()
-new_project = workspace.create_project(
-    project_name=PROJECT_NAME,
-    project_license="MIT",
-    project_type="instance-segmentation",
-    annotation=PROJECT_DESCRIPTION,
+# Define other parameters
+CLASSES = ["chicken"]
+BOX_THRESHOLD = 0.35
+TEXT_THRESHOLD = 0.25
+
+# Load models
+config_path = "./GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py"
+checkpoint_path = "./weights/groundingdino_swint_ogc.pth"
+sam_checkpoint_path = "./weights/sam_vit_h_4b8939.pth"
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+grounding_dino_model, sam_predictor = load_models(
+    config_path, checkpoint_path, sam_checkpoint_path, device
 )
 
-ANNOTATIONS_DIRECTORY = os.path.join(PROJECT_DIR, "data", "annotations")
-image_paths = sv.list_files_with_extensions(
-    directory=os.path.join(PROJECT_DIR, "data", "images"),
-    extensions=["jpg", "jpeg", "png"],
+# Load the linear regression model
+linear_regression_model = LinearRegression()
+linear_regression_model.load("/path/to/saved/linear_regression_model.pkl")
+
+# Annotate and save images
+annotate_and_save_images(
+    grounding_dino_model,
+    sam_predictor,
+    TEST_IMAGES_DIR,
+    os.path.join(OUTPUT_DIR, "annotated"),
+    CLASSES,
+    BOX_THRESHOLD,
+    TEXT_THRESHOLD,
+    linear_regression_model,
 )
 
-for image_path in tqdm(image_paths):
-    image_name = image_path.name
-    annotation_name = f"{image_path.stem}.xml"
-    image_path = str(image_path)
-    annotation_path = os.path.join(ANNOTATIONS_DIRECTORY, annotation_name)
-    new_project.upload(
-        image_path=image_path,
-        annotation_path=annotation_path,
-        split="train",
-        is_prediction=True,
-        overwrite=True,
-        tag_names=["auto-annotated-with-grounded-sam"],
-        batch_name="auto-annotated-with-grounded-sam",
-    )
+# Plot and save images
+plot_and_save_images(
+    grounding_dino_model,
+    sam_predictor,
+    TEST_IMAGES_DIR,
+    os.path.join(OUTPUT_DIR, "plots"),
+    CLASSES,
+    BOX_THRESHOLD,
+    TEXT_THRESHOLD,
+)
+
+# Predict and display weights
+predict_and_display_weights(
+    grounding_dino_model,
+    sam_predictor,
+    TEST_IMAGES_DIR,
+    os.path.join(OUTPUT_DIR, "weights"),
+    CLASSES,
+    BOX_THRESHOLD,
+    TEXT_THRESHOLD,
+    linear_regression_model,
+)
