@@ -1,0 +1,16 @@
+.venv
+
+# models
+/weights/*
+
+# git repo downloaded when running `download_models.py`
+/GroundingDINO
+
+# Linear regression model
+/regression-model/*
+
+# images data
+/data/annotations/*
+/data/images/*
+/data/images/test/*
+/data/outputs/*
