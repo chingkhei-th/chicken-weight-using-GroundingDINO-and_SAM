@@ -39,6 +39,23 @@ def download_models(project_dir):
         "wget -q https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth"
     )
 
+    # Uninstall and install the required version of supervision
+    """
+    NOTE: To glue all the elements of our demo together we will use the 
+    supervision pip package, which will help us process, filter and visualize 
+    our detections as well as to save our dataset. A lower version of the 
+    supervision was installed with Grounding DINO. However, in this demo we need
+    the functionality introduced in the latest versions. Therefore, we uninstall
+    the current supervsion version and install version 0.6.0.
+    """
+    os.system("pip uninstall -y supervision")
+    os.system("pip install -q supervision==0.6.0")
+
+    # Import supervision and print the installed version
+    import supervision as sv
+
+    print(f"Installed supervision version: {sv.__version__}")
+
 
 if __name__ == "__main__":
     project_dir = os.path.dirname(os.path.abspath(__file__))
