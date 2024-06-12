@@ -17,7 +17,7 @@ def download_models(project_dir):
     os.chdir(project_dir)
 
     # Install Grounding DINO
-    os.system("git clone https://github.com/IDEA-Research/GroundingDINO.git")
+    # os.system("git clone https://github.com/IDEA-Research/GroundingDINO.git")
     os.chdir("GroundingDINO")
     os.system("git checkout -q 57535c5a79791cb76e36fdb64975271354f10251")
     os.system("pip install -q -e .")
@@ -25,7 +25,7 @@ def download_models(project_dir):
 
     # Install Segment Anything Model
     os.system(
-        f"{sys.executable} -m pip install 'git+https://github.com/facebookresearch/segment-anything.git'"
+        f"{sys.executable} -m pip install -q git+https://github.com/facebookresearch/segment-anything.git"
     )
 
     # Download Grounding DINO model weights

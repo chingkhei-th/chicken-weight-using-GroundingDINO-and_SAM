@@ -2,8 +2,7 @@ import os
 import cv2
 import numpy as np
 
-
-from utils import enhance_class_name, segment, calculate_area
+from src.utils import enhance_class_name, segment, calculate_area
 
 
 def predict_and_display_weights(

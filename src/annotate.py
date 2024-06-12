@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 import supervision as sv
 
-from utils import enhance_class_name, segment
+from src.utils import enhance_class_name, segment
 
 
 def annotate_and_save_images(

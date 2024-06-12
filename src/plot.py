@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 
-from utils import enhance_class_name, segment
+from src.utils import enhance_class_name, segment
 
 
 def plot_and_save_images(

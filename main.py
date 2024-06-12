@@ -1,5 +1,6 @@
 import os
 import torch
+import joblib
 
 from groundingdino.util.inference import Model
 from segment_anything import sam_model_registry, SamPredictor
@@ -29,8 +30,7 @@ grounding_dino_model, sam_predictor = load_models(
 )
 
 # Load the linear regression model
-linear_regression_model = LinearRegression()
-linear_regression_model.load("/path/to/saved/linear_regression_model.pkl")
+linear_regression_model = joblib.load("./regression-model/LRmodel.pkl")
 
 # Annotate and save images
 annotate_and_save_images(

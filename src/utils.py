@@ -33,3 +33,17 @@ def load_models(
     )
     sam_predictor = SamPredictor(sam)
     return grounding_dino_model, sam_predictor
+
+
+def calculate_area(mask):
+    """
+    Calculate the area of a segmented object in pixels.
+
+    Args:
+        mask (numpy.ndarray): The binary mask of the segmented object.
+
+    Returns:
+        int: The area of the segmented object in pixels.
+    """
+    area = np.sum(mask)
+    return area
