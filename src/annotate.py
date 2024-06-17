@@ -14,7 +14,6 @@ def annotate_and_save_images(
     classes,
     box_threshold,
     text_threshold,
-    linear_regression_model,
 ):
     """
     Annotate images with detections and save the annotated images.
