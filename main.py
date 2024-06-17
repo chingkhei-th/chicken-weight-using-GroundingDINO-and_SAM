@@ -41,7 +41,6 @@ annotate_and_save_images(
     CLASSES,
     BOX_THRESHOLD,
     TEXT_THRESHOLD,
-    linear_regression_model,
 )
 
 # Plot and save images
