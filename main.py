@@ -2,7 +2,7 @@ import os
 import torch
 import joblib
 
-from groundingdino.util.inference import Model
+from GroundingDINO.groundingdino.util.inference import Model
 from segment_anything import sam_model_registry, SamPredictor
 from sklearn.linear_model import LinearRegression
 from src.utils import load_models
