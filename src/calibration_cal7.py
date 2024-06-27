@@ -1,19 +1,14 @@
-# src/calibration.py
+# src/calibration_cal7.py
 
 import cv2
 import numpy as np
 import supervision as sv
-from src.utils import enhance_class_name, segment, calculate_area
-
+from src.utils import segment
 
 # Constants
 A4_WIDTH_MM = 210
 A4_HEIGHT_MM = 297
-
-
-def calculate_actual_a4_area():
-    """Calculate the actual area of an A4 paper in square millimeters."""
-    return A4_WIDTH_MM * A4_HEIGHT_MM
+A4_ASPECT_RATIO = A4_WIDTH_MM / A4_HEIGHT_MM
 
 
 def mask_to_xyxy(mask):
@@ -31,7 +26,7 @@ def detect_and_segment_paper(
     """Detect and segment the A4 paper in the image."""
     detections = grounding_dino_model.predict_with_classes(
         image=image,
-        classes=enhance_class_name(["paper"]),
+        classes=["paper"],
         box_threshold=box_threshold,
         text_threshold=text_threshold,
     )
@@ -48,34 +43,34 @@ def detect_and_segment_paper(
     if len(masks) == 0:
         raise ValueError("Segmentation failed to produce any masks.")
 
-    # Create a full image-sized mask
     full_mask = np.zeros(image.shape[:2], dtype=bool)
     full_mask[masks[0] > 0] = True
-
-    print(f"Mask shape: {full_mask.shape}")
-    print(f"Mask dtype: {full_mask.dtype}")
-    print(f"Mask min-max: {full_mask.min()}-{full_mask.max()}")
 
     return full_mask
 
 
-def calculate_calibration_factor(actual_area, detected_area):
-    """Calculate the calibration factor."""
-    return actual_area / detected_area
+def calculate_calibration_factor(paper_mask):
+    """Calculate the pixels per mm based on the A4 paper width."""
+    xyxy = mask_to_xyxy(paper_mask)
+    paper_width_px = xyxy[2] - xyxy[0]
+    paper_height_px = xyxy[3] - xyxy[1]
+
+    # Check if the paper is in landscape or portrait orientation
+    if paper_width_px / paper_height_px > 1:
+        pixels_per_mm = paper_width_px / A4_WIDTH_MM
+    else:
+        pixels_per_mm = paper_width_px / A4_HEIGHT_MM
+
+    return pixels_per_mm
 
 
-def apply_calibration(area, calibration_factor):
-    """Apply the calibration factor to an area."""
-    return area * calibration_factor
+def apply_calibration(area_px, pixels_per_mm):
+    """Convert pixel area to square millimeters."""
+    return area_px / (pixels_per_mm**2)
 
 
-def annotate_paper(image, mask, area, calibrated_area):
+def annotate_paper(image, mask, area_px, area_mm):
     """Annotate the paper with a bounding box and area information."""
-    print(f"Image shape: {image.shape}")
-    print(f"Mask shape in annotate_paper: {mask.shape}")
-    print(f"Mask dtype in annotate_paper: {mask.dtype}")
-    print(f"Mask min-max in annotate_paper: {mask.min()}-{mask.max()}")
-
     xyxy = mask_to_xyxy(mask)
     detections = sv.Detections(
         xyxy=xyxy[None, ...],
@@ -85,7 +80,7 @@ def annotate_paper(image, mask, area, calibrated_area):
     box_annotator = sv.BoxAnnotator()
     mask_annotator = sv.MaskAnnotator()
 
-    label = f"Paper - Area: {area:.2f} px, Calibrated: {calibrated_area:.2f} sq mm"
+    label = f"Paper - Area: {area_px:.2f} px, Calibrated: {area_mm:.2f} sq mm"
 
     annotated_image = mask_annotator.annotate(scene=image.copy(), detections=detections)
     annotated_image = box_annotator.annotate(

@@ -9,11 +9,10 @@ from src.utils import (load_models, enhance_class_name, segment)
 from src.annotate import annotate_and_save_images
 from src.plot import plot_and_save_images
 from src.calibration_cal7 import (
-    calculate_actual_a4_area,
     detect_and_segment_paper,
     calculate_calibration_factor,
     apply_calibration,
-    annotate_paper
+    annotate_paper,
 )
 
 # Define directories
@@ -43,7 +42,6 @@ def calibrate():
     reference_image = cv2.imread(reference_image_path)
     reference_image_rgb = cv2.cvtColor(reference_image, cv2.COLOR_BGR2RGB)
 
-    actual_a4_area = calculate_actual_a4_area()
     paper_mask = detect_and_segment_paper(
         grounding_dino_model,
         sam_predictor,
@@ -51,29 +49,28 @@ def calibrate():
         BOX_THRESHOLD,
         TEXT_THRESHOLD,
     )
-    detected_paper_area = np.sum(paper_mask)
 
-    calibration_factor = calculate_calibration_factor(
-        actual_a4_area, detected_paper_area
-    )
+    pixels_per_mm = calculate_calibration_factor(paper_mask)
 
-    print(f"Actual A4 paper area: {actual_a4_area} sq mm")
-    print(f"Detected paper area: {detected_paper_area} pixels")
-    print(f"Calibration factor: {calibration_factor}")
+    detected_paper_area_px = np.sum(paper_mask)
+    calibrated_paper_area_mm = apply_calibration(detected_paper_area_px, pixels_per_mm)
 
-    # Annotate and save the reference image with paper
+    print(f"Detected paper area: {detected_paper_area_px} pixels")
+    print(f"Calibrated paper area: {calibrated_paper_area_mm:.2f} sq mm")
+    print(f"Pixels per mm: {pixels_per_mm:.2f}")
+
     annotated_reference = annotate_paper(
-        reference_image, paper_mask, detected_paper_area, actual_a4_area
+        reference_image, paper_mask, detected_paper_area_px, calibrated_paper_area_mm
     )
     cv2.imwrite(
         os.path.join(OUTPUT_DIR, "annotated_reference.jpg"), annotated_reference
     )
 
-    return calibration_factor
+    return pixels_per_mm
 
 
 def main():
-    calibration_factor = calibrate()
+    pixels_per_mm = calibrate()
 
     # Process phone images
     for filename in os.listdir(phone_IMAGE_DIR):
@@ -84,7 +81,7 @@ def main():
 
             detections = grounding_dino_model.predict_with_classes(
                 image=image_rgb,
-                classes=enhance_class_name(["phone"]),
+                classes=["phone"],
                 box_threshold=BOX_THRESHOLD,
                 text_threshold=TEXT_THRESHOLD,
             )
@@ -95,20 +92,19 @@ def main():
                 xyxy=detections.xyxy,
             )
 
-            # Annotate phones with area information
             box_annotator = sv.BoxAnnotator()
             mask_annotator = sv.MaskAnnotator()
 
             labels = []
             for i, mask in enumerate(detections.mask):
-                phone_area = np.sum(mask)
-                calibrated_area = apply_calibration(phone_area, calibration_factor)
-                label = f"phone {i+1} - Area: {phone_area:.2f} px, Calibrated: {calibrated_area:.2f} sq mm"
+                phone_area_px = np.sum(mask)
+                phone_area_mm = apply_calibration(phone_area_px, pixels_per_mm)
+                label = f"Phone {i+1} - Area: {phone_area_px:.2f} px, Calibrated: {phone_area_mm:.2f} sq mm"
                 labels.append(label)
 
-                print(f"phone {i+1} in {filename}:")
-                print(f"  Detected area: {phone_area} pixels")
-                print(f"  Calibrated area: {calibrated_area:.2f} sq mm")
+                print(f"Phone {i+1} in {filename}:")
+                print(f"  Detected area: {phone_area_px} pixels")
+                print(f"  Calibrated area: {phone_area_mm:.2f} sq mm")
 
             annotated_image = mask_annotator.annotate(
                 scene=image.copy(), detections=detections
@@ -117,13 +113,11 @@ def main():
                 scene=annotated_image, detections=detections, labels=labels
             )
 
-            # Save the annotated output
             output_path = os.path.join(
                 OUTPUT_DIR, f"{os.path.splitext(filename)[0]}_annotated.jpg"
             )
             cv2.imwrite(output_path, annotated_image)
 
-            # Save the segmented output
             segmented_output = np.max(detections.mask, axis=0) * 255
             segmented_output_path = os.path.join(
                 OUTPUT_DIR, f"{os.path.splitext(filename)[0]}_segmented.png"
