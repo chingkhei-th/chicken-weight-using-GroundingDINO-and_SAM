@@ -28,3 +28,8 @@ output_images_1.zip
 
 # extra script
 check_cuda.py
+src/annotate_cal.py
+src/annotate_cal2.py
+src/calibrator_cal.py
+src/utils_cal.py
+src/utils_cal2.py
