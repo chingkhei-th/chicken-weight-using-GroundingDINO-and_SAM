@@ -1,4 +1,4 @@
-.dino
+.dino-sam
 
 # models
 weights/*
@@ -17,3 +17,18 @@ data/outputs/*
 
 # pycache
 src/__pycache__
+
+# Temp folder
+calibration_test
+data
+output
+output_images
+output_images_1.zip
+
+# Extra scritpt
+check_cuda.py
+src/annotate_cal.py
+src/annotate_cal2.py
+src/utils_cal.py
+src/utils_cal2.py
+src/calibrator_cal.py
