@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from typing import List
-from groundingdino.util.inference import Model
+from GroundingDINO.groundingdino.util.inference import Model
 from segment_anything import sam_model_registry, SamPredictor
 
 

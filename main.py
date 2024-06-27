@@ -11,11 +11,11 @@ from src.plot import plot_and_save_images
 from src.weight_predict import predict_and_display_weights
 
 # Define directories
-TEST_IMAGES_DIR = "./data/images/test"
-OUTPUT_DIR = "./data/outputs"
+TEST_IMAGES_DIR = "./data/images/reference_image/"
+OUTPUT_DIR = "./data/outputs/ref_output"
 
 # Define other parameters
-CLASSES = ["chicken"]
+CLASSES = ["paper"]
 BOX_THRESHOLD = 0.35
 TEXT_THRESHOLD = 0.25
 
