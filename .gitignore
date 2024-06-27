@@ -1,4 +1,4 @@
-.dino
+.dino-sam
 
 # models
 weights/*
@@ -17,3 +17,14 @@ data/outputs/*
 
 # pycache
 src/__pycache__
+
+# test folders
+grounding-dino-test
+calibration_test
+data
+output_images
+output
+output_images_1.zip
+
+# extra script
+check_cuda.py
